@@ -200,6 +200,116 @@ app.delete("/products/:id", async (req, res) => {
   }
 });
 
+app.get("/products", async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute("SELECT * FROM products");
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    res.json({ message: "Database error", error });
+  }
+});
+
+app.post("/cart", async (req, res) => {
+  try {
+    const { customer_id, product_id, quantity } = req.body;
+    if (
+      customer_id === null ||
+      customer_id === undefined ||
+      customer_id === ""
+    ) {
+      return res.json({
+        message: "customer_id is empty",
+      });
+    }
+    if (product_id === null || product_id === undefined || product_id === "") {
+      return res.json({
+        message: "product_id is empty",
+      });
+    }
+    if (quantity === null || quantity === undefined || quantity === "") {
+      return res.json({
+        message: "quantity is empty",
+      });
+    }
+    const connection = await mysql.createConnection(dbConfig);
+
+    const [product] = await connection.execute(
+      "SELECT count FROM products WHERE id = ?",
+      [product_id]
+    );
+    if (product.length === 0 || product[0].count < quantity) {
+      await connection.end();
+      return res.json({
+        message: "Product not available or insufficient quantity",
+      });
+    }
+
+    await connection.execute(
+      "INSERT INTO carts (customer_id, product_id, quantity) VALUES (?, ?, ?)",
+      [customer_id, product_id, quantity]
+    );
+
+    await connection.execute(
+      "UPDATE products SET count = count - ? WHERE id = ?",
+      [quantity, product_id]
+    );
+
+    await connection.end();
+    res.json({ message: "Product added to cart successfully" });
+  } catch (error) {
+    res.json({ message: "Database error", error });
+  }
+});
+
+app.post("/orders", async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+
+    const [cartItems] = await connection.execute(
+      "SELECT * FROM carts WHERE customer_id = ?",
+      [req.body.customer_id]
+    );
+
+    for (const item of cartItems) {
+      const [product] = await connection.execute(
+        "SELECT * FROM products WHERE id = ?",
+        [item.product_id]
+      );
+
+      if (product.length === 0 || product[0].count < item.quantity) {
+        await connection.end();
+        return res.json({
+          message: "Product not available or insufficient quantity in cart",
+        });
+      }
+
+      await connection.execute(
+        "INSERT INTO orders (customer_id, product_id, quantity, total_price) VALUES (?, ?, ?, ?)",
+        [
+          item.customer_id,
+          item.product_id,
+          item.quantity,
+          product[0].price * item.quantity,
+        ]
+      );
+
+      await connection.execute(
+        "UPDATE products SET count = count - ? WHERE id = ?",
+        [item.quantity, item.product_id]
+      );
+
+      await connection.execute("DELETE FROM carts WHERE id = ?", [item.id]);
+    }
+
+    await connection.end();
+    res.json({ message: "Order placed successfully" });
+  } catch (error) {
+    res.json({ message: "Database error", error });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
