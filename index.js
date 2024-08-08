@@ -3,10 +3,13 @@ const bodyParser = require("body-parser");
 const mysql = require("mysql2/promise");
 const app = express();
 const multer = require("multer");
+const cors = require("cors");
 
-const port = 3000;
+const port = 3001;
 
 app.use(bodyParser.json());
+
+app.use(cors());
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -310,6 +313,239 @@ app.post("/orders", async (req, res) => {
   }
 });
 
+app.get("/getProducts", (req, res) => {
+  let products = [
+    {
+      id: 1,
+      product_name: "Product 1",
+      sku: "SKU001",
+      price: 10.0,
+      description: "Description for product 1",
+      brand: "Brand A",
+    },
+    {
+      id: 2,
+      product_name: "Product 2",
+      sku: "SKU002",
+      price: 20.0,
+      description: "Description for product 2",
+      brand: "Brand B",
+    },
+    {
+      id: 3,
+      product_name: "Product 3",
+      sku: "SKU003",
+      price: 30.0,
+      description: "Description for product 3",
+      brand: "Brand C",
+    },
+    {
+      id: 4,
+      product_name: "Product 4",
+      sku: "SKU004",
+      price: 40.0,
+      description: "Description for product 4",
+      brand: "Brand D",
+    },
+    {
+      id: 5,
+      product_name: "Product 5",
+      sku: "SKU005",
+      price: 50.0,
+      description: "Description for product 5",
+      brand: "Brand E",
+    },
+    {
+      id: 6,
+      product_name: "Product 6",
+      sku: "SKU006",
+      price: 60.0,
+      description: "Description for product 6",
+      brand: "Brand F",
+    },
+    {
+      id: 7,
+      product_name: "Product 7",
+      sku: "SKU007",
+      price: 70.0,
+      description: "Description for product 7",
+      brand: "Brand G",
+    },
+    {
+      id: 8,
+      product_name: "Product 8",
+      sku: "SKU008",
+      price: 80.0,
+      description: "Description for product 8",
+      brand: "Brand H",
+    },
+    {
+      id: 9,
+      product_name: "Product 9",
+      sku: "SKU009",
+      price: 90.0,
+      description: "Description for product 9",
+      brand: "Brand I",
+    },
+    {
+      id: 10,
+      product_name: "Product 10",
+      sku: "SKU010",
+      price: 100.0,
+      description: "Description for product 10",
+      brand: "Brand J",
+    },
+    {
+      id: 11,
+      product_name: "Product 11",
+      sku: "SKU011",
+      price: 110.0,
+      description: "Description for product 11",
+      brand: "Brand K",
+    },
+    {
+      id: 12,
+      product_name: "Product 12",
+      sku: "SKU012",
+      price: 120.0,
+      description: "Description for product 12",
+      brand: "Brand L",
+    },
+    {
+      id: 13,
+      product_name: "Product 13",
+      sku: "SKU013",
+      price: 130.0,
+      description: "Description for product 13",
+      brand: "Brand M",
+    },
+    {
+      id: 14,
+      product_name: "Product 14",
+      sku: "SKU014",
+      price: 140.0,
+      description: "Description for product 14",
+      brand: "Brand N",
+    },
+    {
+      id: 15,
+      product_name: "Product 15",
+      sku: "SKU015",
+      price: 150.0,
+      description: "Description for product 15",
+      brand: "Brand O",
+    },
+    {
+      id: 16,
+      product_name: "Product 16",
+      sku: "SKU016",
+      price: 160.0,
+      description: "Description for product 16",
+      brand: "Brand P",
+    },
+    {
+      id: 17,
+      product_name: "Product 17",
+      sku: "SKU017",
+      price: 170.0,
+      description: "Description for product 17",
+      brand: "Brand Q",
+    },
+    {
+      id: 18,
+      product_name: "Product 18",
+      sku: "SKU018",
+      price: 180.0,
+      description: "Description for product 18",
+      brand: "Brand R",
+    },
+    {
+      id: 19,
+      product_name: "Product 19",
+      sku: "SKU019",
+      price: 190.0,
+      description: "Description for product 19",
+      brand: "Brand S",
+    },
+    {
+      id: 20,
+      product_name: "Product 20",
+      sku: "SKU020",
+      price: 200.0,
+      description: "Description for product 20",
+      brand: "Brand T",
+    },
+    {
+      id: 21,
+      product_name: "Product 21",
+      sku: "SKU021",
+      price: 210.0,
+      description: "Description for product 21",
+      brand: "Brand U",
+    },
+    {
+      id: 22,
+      product_name: "Product 22",
+      sku: "SKU022",
+      price: 220.0,
+      description: "Description for product 22",
+      brand: "Brand V",
+    },
+    {
+      id: 23,
+      product_name: "Product 23",
+      sku: "SKU023",
+      price: 230.0,
+      description: "Description for product 23",
+      brand: "Brand W",
+    },
+    {
+      id: 24,
+      product_name: "Product 24",
+      sku: "SKU024",
+      price: 240.0,
+      description: "Description for product 24",
+      brand: "Brand X",
+    },
+    {
+      id: 25,
+      product_name: "Product 25",
+      sku: "SKU025",
+      price: 250.0,
+      description: "Description for product 25",
+      brand: "Brand Y",
+    },
+  ];
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+
+  const resultProducts = products.slice(startIndex, endIndex);
+
+  const pagination = {};
+  if (endIndex < products.length) {
+    pagination.next = {
+      page: page + 1,
+      limit: limit,
+    };
+  }
+  if (startIndex > 0) {
+    pagination.prev = {
+      page: page - 1,
+      limit: limit,
+    };
+  }
+
+  res.json({
+    totalProducts: products.length,
+    page,
+    limit,
+    pagination,
+    products: resultProducts,
+  });
+});
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
